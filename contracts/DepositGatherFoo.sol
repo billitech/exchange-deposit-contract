@@ -11,7 +11,7 @@ contract GLDToken is ERC20 {
     }
 }
 
-contract ProxyFactory {
+contract DeployGathererExecutor {
     /**
      * @dev Deploys and returns the address of a clone that mimics the behaviour of `implementation`.
      *
@@ -75,5 +75,18 @@ contract ProxyFactory {
         bytes32 salt
     ) public view returns (address predicted) {
         return predictDeterministicAddress(implementation, salt, address(this));
+    }
+}
+
+contract DeployGatherer {
+    using SafeERC20 for IERC20;
+
+    function gatherErc20(address payable addr) public {
+        IERC20 instance = IERC20(addr);
+        address payable toAddr = 0x4B0897b0513fdC7C541B6d9D7E929C4e5364D2dB;
+        uint256 forwarderBalance = instance.balanceOf(address(this));
+        if (forwarderBalance > 0) {
+            instance.safeTransfer(toAddr, forwarderBalance);
+        }
     }
 }

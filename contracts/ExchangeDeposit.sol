@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6.11;
-import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
-import '@openzeppelin/contracts/utils/Address.sol';
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 /**
  * @title ExchangeDeposit
@@ -53,8 +53,8 @@ contract ExchangeDeposit {
      * @param adminAddr See storage adminAddress
      */
     constructor(address payable coldAddr, address payable adminAddr) public {
-        require(coldAddr != address(0), '0x0 is an invalid address');
-        require(adminAddr != address(0), '0x0 is an invalid address');
+        require(coldAddr != address(0), "0x0 is an invalid address");
+        require(adminAddr != address(0), "0x0 is an invalid address");
         coldAddress = coldAddr;
         adminAddress = adminAddr;
         thisAddress = address(this);
@@ -112,26 +112,27 @@ contract ExchangeDeposit {
         // Use exDepositor to perform logic for finding send address
         address payable coldAddr = exDepositor.coldAddress();
         // If ExchangeDeposit is killed, use adminAddress, else use coldAddress
-        address payable toAddr =
-            coldAddr == address(0) ? exDepositor.adminAddress() : coldAddr;
+        address payable toAddr = coldAddr == address(0)
+            ? exDepositor.adminAddress()
+            : coldAddr;
         return toAddr;
     }
 
     /**
      * @dev Modifier that will execute internal code block only if the sender is the specified account
      */
-    modifier onlyAdmin {
-        require(msg.sender == adminAddress, 'Unauthorized caller');
+    modifier onlyAdmin() {
+        require(msg.sender == adminAddress, "Unauthorized caller");
         _;
     }
 
     /**
      * @dev Modifier that will execute internal code block only if not killed
      */
-    modifier onlyAlive {
+    modifier onlyAlive() {
         require(
             getExchangeDepositor().coldAddress() != address(0),
-            'I am dead :-('
+            "I am dead :-("
         );
         _;
     }
@@ -140,8 +141,8 @@ contract ExchangeDeposit {
      * @dev Modifier that will execute internal code block only if called directly
      * (Not via proxy delegatecall)
      */
-    modifier onlyExchangeDepositor {
-        require(isExchangeDepositor(), 'Calling Wrong Contract');
+    modifier onlyExchangeDepositor() {
+        require(isExchangeDepositor(), "Calling Wrong Contract");
         _;
     }
 
@@ -169,21 +170,18 @@ contract ExchangeDeposit {
         if (balance == 0) {
             return;
         }
-        (bool result, ) = getSendAddress().call{ value: balance }('');
-        require(result, 'Could not gather ETH');
+        (bool result, ) = getSendAddress().call{value: balance}("");
+        require(result, "Could not gather ETH");
     }
 
     /**
      * @notice Change coldAddress to newAddress.
      * @param newAddress the new address for coldAddress
      */
-    function changeColdAddress(address payable newAddress)
-        external
-        onlyExchangeDepositor
-        onlyAlive
-        onlyAdmin
-    {
-        require(newAddress != address(0), '0x0 is an invalid address');
+    function changeColdAddress(
+        address payable newAddress
+    ) external onlyExchangeDepositor onlyAlive onlyAdmin {
+        require(newAddress != address(0), "0x0 is an invalid address");
         coldAddress = newAddress;
     }
 
@@ -192,15 +190,12 @@ contract ExchangeDeposit {
      * @dev newAddress can be address(0) (to disable extra implementations)
      * @param newAddress the new address for implementation
      */
-    function changeImplAddress(address payable newAddress)
-        external
-        onlyExchangeDepositor
-        onlyAlive
-        onlyAdmin
-    {
+    function changeImplAddress(
+        address payable newAddress
+    ) external onlyExchangeDepositor onlyAlive onlyAdmin {
         require(
             newAddress == address(0) || newAddress.isContract(),
-            'implementation must be contract'
+            "implementation must be contract"
         );
         implementation = newAddress;
     }
@@ -209,12 +204,9 @@ contract ExchangeDeposit {
      * @notice Change minimumInput to newMinInput.
      * @param newMinInput the new minimumInput
      */
-    function changeMinInput(uint256 newMinInput)
-        external
-        onlyExchangeDepositor
-        onlyAlive
-        onlyAdmin
-    {
+    function changeMinInput(
+        uint256 newMinInput
+    ) external onlyExchangeDepositor onlyAlive onlyAdmin {
         minimumInput = newMinInput;
     }
 
@@ -238,10 +230,10 @@ contract ExchangeDeposit {
         // since we know that any call here has no calldata
         // this saves a large amount of gas due to the fact we know
         // that this can only be called from the ExchangeDeposit context
-        require(coldAddress != address(0), 'I am dead :-(');
-        require(msg.value >= minimumInput, 'Amount too small');
-        (bool success, ) = coldAddress.call{ value: msg.value }('');
-        require(success, 'Forwarding funds failed');
+        require(coldAddress != address(0), "I am dead :-(");
+        require(msg.value >= minimumInput, "Amount too small");
+        (bool success, ) = coldAddress.call{value: msg.value}("");
+        require(success, "Forwarding funds failed");
         emit Deposit(msg.sender, msg.value);
     }
 
@@ -253,8 +245,8 @@ contract ExchangeDeposit {
      */
     fallback() external payable onlyAlive {
         address payable toAddr = getImplAddress();
-        require(toAddr != address(0), 'Fallback contract not set');
+        require(toAddr != address(0), "Fallback contract not set");
         (bool success, ) = toAddr.delegatecall(msg.data);
-        require(success, 'Fallback contract failed');
+        require(success, "Fallback contract failed");
     }
 }
