@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
 // A solidity implementation of the minimal proxy deployed from ExchangeDeposit
 contract Proxy {
     address payable public immutable target;

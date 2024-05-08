@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11;
+pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 /**
@@ -52,12 +52,12 @@ contract ExchangeDeposit {
      * @param coldAddr See storage coldAddress
      * @param adminAddr See storage adminAddress
      */
-    constructor(address payable coldAddr, address payable adminAddr) public {
+    constructor(address payable coldAddr, address payable adminAddr) {
         require(coldAddr != address(0), "0x0 is an invalid address");
         require(adminAddr != address(0), "0x0 is an invalid address");
         coldAddress = coldAddr;
         adminAddress = adminAddr;
-        thisAddress = address(this);
+        thisAddress = payable(address(this));
     }
 
     /**
