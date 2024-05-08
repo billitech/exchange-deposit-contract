@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract GLDToken is ERC20 {
@@ -23,20 +22,6 @@ contract DeterministicProxyCloner {
     error FailedDeployment();
 
     /**
-     * @dev Deploys and returns the address of a clone that mimics the behaviour of `implementation`.
-     *
-     * This function uses the create2 opcode and a `salt` to deterministically deploy
-     * the clone. Using the same `implementation` and `salt` multiple time will revert, since
-     * the clones cannot be deployed twice at the same address.
-     */
-    function clone(
-        address implementation,
-        bytes32 salt
-    ) internal returns (address instance) {
-        return clone(implementation, salt, 0);
-    }
-
-    /**
      * @dev Same as {xref-Clones-cloneDeterministic-address-bytes32-}[cloneDeterministic], but with
      * a `value` parameter to send native currency to the new contract.
      *
@@ -45,12 +30,8 @@ contract DeterministicProxyCloner {
      */
     function clone(
         address implementation,
-        bytes32 salt,
-        uint256 value
-    ) internal returns (address instance) {
-        if (address(this).balance < value) {
-            revert InsufficientBalance(address(this).balance, value);
-        }
+        bytes32 salt
+    ) public returns (address instance) {
         /// @solidity memory-safe-assembly
         assembly {
             // Stores the bytecode after address
@@ -65,7 +46,7 @@ contract DeterministicProxyCloner {
                     0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000
                 )
             )
-            instance := create2(value, 0x09, 0x37, salt)
+            instance := create2(0, 0x09, 0x37, salt)
         }
         if (instance == address(0)) {
             revert FailedDeployment();
@@ -77,10 +58,10 @@ contract DeterministicProxyCloner {
      */
     function predictAddress(
         address implementation,
-        bytes32 salt,
-        address deployer
-    ) internal pure returns (address predicted) {
+        bytes32 salt
+    ) public view returns (address predicted) {
         /// @solidity memory-safe-assembly
+        address deployer = address(this);
         assembly {
             let ptr := mload(0x40)
             mstore(add(ptr, 0x38), deployer)
@@ -94,16 +75,6 @@ contract DeterministicProxyCloner {
                 0xffffffffffffffffffffffffffffffffffffffff
             )
         }
-    }
-
-    /**
-     * @dev Computes the address of a clone deployed using {Clones-cloneDeterministic}.
-     */
-    function predictAddress(
-        address implementation,
-        bytes32 salt
-    ) internal view returns (address predicted) {
-        return predictAddress(implementation, salt, address(this));
     }
 }
 
