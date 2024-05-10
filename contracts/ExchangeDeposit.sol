@@ -252,11 +252,6 @@ contract ExchangeDeposit {
 
 contract DeterministicProxyCloner {
     /**
-     * @dev The ETH balance of the account is not enough to perform the operation.
-     */
-    error InsufficientBalance(uint256 balance, uint256 needed);
-
-    /**
      * @dev The deployment failed.
      */
     error FailedDeployment();
